@@ -1,104 +1,98 @@
 unit DistTran;
 
-//copy from ...
-  
+interface
+
 uses Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, DB, ADODB, OleDB, COmObj, ADOInt;
+  Dialogs, DB, ADODB, OleDB, COmObj, ADOInt, MSAccess;
 
-function  DTCTransactionStart: ITransaction;
-procedure DTCTransactionCommit(ATransaction:ITransaction);
-procedure DTCTransactionRollback(ATransaction:ITransaction);
+function DTCTransactionStart: ITransaction;
+procedure DTCTransactionCommit(ATransaction: ITransaction);
+procedure DTCTransactionRollback(ATransaction: ITransaction);
 
-procedure JoinSessionIntoTransaction(AConnectionArray:array of TADOConnection;
-  ATransaction:ITransaction);
-procedure UnJoinSession(AConnectionArray:array of TADOConnection);
+procedure JoinSessionIntoTransaction(AConnectionArray: array of TMSConnection; ATransaction:ITransaction);
+procedure UnJoinSession(AConnectionArray: array of TMSConnection);
 
 implementation
 
 function DtcGetTransactionManager(
-  hostName:PChar;
-  tmName:PChar;
-  iid:Pointer;
-  dwReserved1:DWord;
-  wReserved2:Word;
-  pvReserved:Pointer;
-  out txnDispenser:ITransactionDispenser
+  hostName: PChar;
+  tmName: PChar;
+  iid: Pointer;
+  dwReserved1: DWord;
+  wReserved2: Word;
+  pvReserved: Pointer;
+  out txnDispenser: ITransactionDispenser
 ): HResult; cdecl; external 'xolehlp.dll';
 
-function DTCTransactionStart:ITransaction;
+function DTCTransactionStart: ITransaction;
 var
   ID: ITransactionDispenser;
 begin
-  Result:=nil;
-  OLECheck(DtcGetTransactionManager(
-    nil
-    , nil
-    , @IID_ITransactionDispenser
-    , 0
-    , 0
-    , nil
-    ID)
+  Result := Nil;
+  
+  OLECheck(
+    DtcGetTransactionManager(Nil, Nil, @IID_ITransactionDispenser, 0, 0, Nil, ID)
   );
 
   OLECheck(
-    ID.BeginTransaction(
-      nil
-      , $1000
-      , ISOFLAG_RETAIN_DONTCARE
-      , nil
-      , Result
-    )
+    ID.BeginTransaction(Nil, ISOLATIONLEVEL_READCOMMITTED, 0, Nil, Result)
   );
 end;
 
 procedure DTCTransactionCommit(ATransaction:ITransaction);
 begin
-  OLECheck(ATransaction.Commit(false,0,0));
+  OLECheck(
+    ATransaction.Commit(False, 0, 0)
+  );
 end;
 
-procedure DTCTransactionRollback(ATransaction:ITransaction);
-var
-  B:BOID;
+procedure DTCTransactionRollback(ATransaction: ITransaction);
 begin
-  OLECheck(ATransaction.Abort(@B,false,false));
+  OLECheck(
+    ATransaction.Abort(Nil, False, False)
+  );
 end;
 
-procedure JoinSessionIntoTransaction(AConnectionArray:array of TADOConnection;
-  ATransaction:ITransaction);
+type THack = class(TMSConnection);
+
+procedure JoinSessionIntoTransaction(AConnectionArray: array of TMSConnection; ATransaction: ITransaction);
 var
-  ICC:ADOConnectionConstruction;
-  ISP:IInterface;
-  ITJ:ITransactionJoin;
-  i:integer;
+  ITJ: ITransactionJoin;
+  i: Integer;
 begin
-  for i:=Low(AConnectionArray) to High(AConnectionArray) do
+  for i:= Low(AConnectionArray) to High(AConnectionArray) do
   begin
-    if not AConnectionArray[i].Connected then AConnectionArray[i].Open;
-    OLECheck(AConnectionArray[i].ConnectionObject.QueryInterface(
-      IID_ADOConnectionConstruction,ICC));
-    ISP:=ICC.Get_Session;
-    OLECheck(ISP.QueryInterface(IID_ITransactionJoin,ITJ));
-    OLECheck(ITJ.JoinTransaction(ATransaction,$1000,0,nil));
+    if not AConnectionArray[i].Connected then
+      AConnectionArray[i].Open;
+
+    OLECheck(
+      THack(AConnectionArray[i]).IConnection.SessionProperties.QueryInterface(IID_ITransactionJoin, ITJ)
+    );
+
+    OLECheck(
+      ITJ.JoinTransaction(ATransaction, ISOLATIONLEVEL_READCOMMITTED, 0, Nil)
+    );
   end;
 end;
 
-procedure UnJoinSession(AConnectionArray:array of TADOConnection);
+procedure UnJoinSession(AConnectionArray: array of TMSConnection);
 var
-  ICC:ADOConnectionConstruction;
-  ISP:IInterface;
-  ITJ:ITransactionJoin;
-  i:integer;
+  ITJ: ITransactionJoin;
+  i: Integer;
 begin
-  for i:=Low(AConnectionArray) to High(AConnectionArray) do
+  for i:= Low(AConnectionArray) to High(AConnectionArray) do
   begin
-    if AConnectionArray[i].Connected then
-    begin
-      OLECheck(AConnectionArray[i].ConnectionObject.QueryInterface(
-        IID_ADOConnectionConstruction,ICC));
-      ISP:=ICC.Get_Session;
-      OLECheck(ISP.QueryInterface(IID_ITransactionJoin,ITJ));
-      OLECheck(ITJ.JoinTransaction(nil,0,0,nil));
-    end;
+    if not AConnectionArray[i].Connected then
+      AConnectionArray[i].Open;
+
+    OLECheck(
+      THack(AConnectionArray[i]).IConnection.SessionProperties.QueryInterface(IID_ITransactionJoin, ITJ)
+    );
+
+    OLECheck(
+      ITJ.JoinTransaction(Nil, 0, 0, Nil)
+    );
   end;
 end;
 
+end.
