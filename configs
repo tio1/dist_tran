@@ -1,0 +1,37 @@
+#client config file (.bat)
+
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccess /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessAdmin /t REG_DWORD /d 0
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessClients /t REG_DWORD /d 0
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessInbound /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessOutbound /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessTransactions /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v XaTransactions /t REG_DWORD /d 0
+
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC" /f /v AllowOnlySecureRpcCalls /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC" /f /v FallbackToUnsecureRPCIfNecessary /t REG_DWORD /d 0
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC" /f /v TurnOffRpcSecurity /t REG_DWORD /d 0
+
+net stop MSDTC
+net start MSDTC
+
+pause
+
+#server config file (.bat)
+
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccess /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessAdmin /t REG_DWORD /d 0
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessClients /t REG_DWORD /d 0
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessInbound /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessOutbound /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v NetworkDtcAccessTransactions /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC\Security" /f /v XaTransactions /t REG_DWORD /d 1
+
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC" /f /v AllowOnlySecureRpcCalls /t REG_DWORD /d 1
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC" /f /v FallbackToUnsecureRPCIfNecessary /t REG_DWORD /d 0
+reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\MSDTC" /f /v TurnOffRpcSecurity /t REG_DWORD /d 0
+
+net stop MSDTC
+net start MSDTC
+
+pause
